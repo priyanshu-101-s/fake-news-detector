@@ -1,0 +1,49 @@
+<script>
+async function checkArticle() {
+  const url = document.getElementById("articleUrl").value;
+  document.getElementById("result").innerHTML = "<div class='text-center'>Checking... ⏳</div>";
+
+  const response = await fetch("/checkArticle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url })
+  });
+
+  const data = await response.json();
+
+  const verdictColor =
+    data.status.includes("Credible") ? "success" :
+    data.status.includes("Low") ? "warning" : "danger";
+
+  // Build alternates list
+  let altArticlesHTML = "";
+  if (data.alternates && data.alternates.length > 0) {
+    altArticlesHTML = "<hr/><h6>🔎 Related Coverage (Top sources)</h6><ul>";
+    data.alternates.forEach(a => {
+      altArticlesHTML += `<li><strong>${a.source}</strong>: 
+        <a href="${a.url}" target="_blank">${a.title}</a>
+      </li>`;
+    });
+    altArticlesHTML += "</ul>";
+  }
+
+  document.getElementById("result").innerHTML = `
+    <div class="card border-${verdictColor}">
+      <div class="card-body">
+        <h5 class="card-title">Credibility Check: 
+          <span class="badge bg-${verdictColor}">${data.status}</span>
+        </h5>
+        <p class="card-text">${data.message}</p>
+
+        <div class="progress mt-3" style="height:25px;">
+          <div class="progress-bar bg-${verdictColor}" 
+               role="progressbar" 
+               style="width: ${data.score}%;">
+            Credibility Score: ${data.score}%
+          </div>
+        </div>
+        ${altArticlesHTML}
+      </div>
+    </div>`;
+}
+</script>
